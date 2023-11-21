@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  alessandrois_app:
+    build:
+      context: .docker/php
+      dockerfile: Dockerfile
+    container_name: "alessandrois_app"
+    image: server-apache
+    volumes:
+      - .docker/apache/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
+      - ./www:/var/www/html
+    ports:
+      - "8000:80"
+    restart: always
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+    depends_on:
+      - db
+    networks:
+      - alessandrois_network
+
+  alessandrois_db:
+    image: mysql:latest
+    container_name: "alessandrois_db"
+    volumes:
+      - .docker/db:/var/lib/mysql
+    restart: always
+    ports:
+      - "3300:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    networks:
+      - alessandrois_network
+
+networks:
+  alessandrois_network:
+    driver: bridge
