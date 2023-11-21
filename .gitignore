@@ -1,3 +1,6 @@
 /.idea
-composer.lock
+/www/composer.lock
+/composer.lock
 /.docker/db/*
+/www/vendor/
+/vendor/

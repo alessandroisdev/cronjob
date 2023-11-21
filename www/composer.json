@@ -1,0 +1,21 @@
+{
+    "name": "alessandroisdev/cronjob",
+    "description": "Trabalhando com filas de maneira simplificada",
+    "autoload": {
+        "psr-4": {
+            "AlessandroIsDev\\CronJob\\": "src/"
+        },
+        "files": [
+            "Config/Config.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Alessandro P Souza"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "doctrine/dbal": "3.7.2"
+    }
+}
