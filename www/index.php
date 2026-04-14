@@ -7,13 +7,6 @@ use AlessandroIsDev\CronJob\Enums\JobStatus;
 
 $model = new FilaModel();
 
-if (isset($_POST['seedTest'])) {
-    FilaModel::add(['email' => 'joao@dominio.com', 'nome' => 'João'], 'AlessandroIsDev\CronJob\Jobs\WelcomeEmailJob', 'send', 'alta_prioridade');
-    FilaModel::add(['rows' => 150000], 'AlessandroIsDev\CronJob\Jobs\HeavyReportJob', 'generate', 1);
-    FilaModel::add(['usuario' => 'admin'], 'ClasseQueVistamenteNaoExiste', 'falharPropositalmente');
-    header("Location: /");
-    exit;
-}
 
 $stats = $model->getStats();
 $jobs = $model->getAll(100);
@@ -201,10 +194,7 @@ function formatStatus(int $status): string {
     <div class="container">
         <header>
             <h1>Queue Dashboard</h1>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <form method="POST" style="margin: 0;">
-                    <button type="submit" name="seedTest" style="background:var(--accent); color:white; border:none; padding:10px 15px; border-radius:8px; font-family:inherit; font-weight:600; cursor:pointer;">+ Testar Fila (Seeds fake)</button>
-                </form>
+            <div>
                 <a href="#" style="color:var(--text-muted); text-decoration:none; font-weight: 600;">Auto-Refresh 10s</a>
             </div>
         </header>
