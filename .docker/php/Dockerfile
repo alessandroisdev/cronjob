@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.4-apache
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   autoconf \
@@ -22,11 +22,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN docker-php-ext-install gd intl  pdo_mysql pdo_pgsql mysqli zip pdo_dblib soap
 
-RUN pecl install imagick-3.7.0
+RUN apt-get update && apt-get install -y git && git clone https://github.com/Imagick/imagick.git /usr/src/php/ext/imagick && docker-php-ext-install imagick
 
-RUN pecl install xdebug && docker-php-ext-enable xdebug
-
-RUN docker-php-ext-enable imagick pdo_dblib
+RUN pecl install xdebug && docker-php-ext-enable xdebug pdo_dblib
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 

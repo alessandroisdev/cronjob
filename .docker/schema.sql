@@ -1,0 +1,15 @@
+CREATE DATABASE IF NOT EXISTS `cronjob`;
+USE `cronjob`;
+
+CREATE TABLE IF NOT EXISTS `fila` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0=Aguardando, 1=Processando, 2=Sucesso, 4=Erro, 5=Aguardando Reprocessamento',
+  `classe` VARCHAR(255) NOT NULL,
+  `metodo` VARCHAR(255) NOT NULL,
+  `argumentos` JSON DEFAULT NULL,
+  `payload` JSON DEFAULT NULL,
+  `tentativas` INT NOT NULL DEFAULT 0,
+  `log` TEXT DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
