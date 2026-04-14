@@ -1,80 +1,131 @@
-<p align="center">
-  <h1 align="center">⚙️ QueueWorker Engine</h1>
-  <p align="center">Processamento de filas assíncronas inteligente e tolerante a falhas feito em PHP 8.4.</p>
-</p>
+<div align="center">
+  <img src="https://img.shields.io/badge/PHP-8.4-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.4" />
+  <img src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Doctrine-DBAL-F68D2E?style=for-the-badge&logo=php&logoColor=white" alt="Doctrine" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License" />
 
-## 📖 Sobre o Projeto
-O **QueueWorker Engine** (CronJob) é um motor de mensageria baseada em banco de dados (_Database-backed queues_) desenvolvido para escalar e abstrair o processamento de tarefas pesadas. Projetado especialmente para desopilar rotinas síncronas HTTP, o motor captura os jobs em tabelas e os processa autonomamente usando recursos modernos do **PHP 8.4** através da *Reflection API*.
+  <h2>🌟 CronJob Engine Pro</h2>
+  <p><strong>Motor assíncrono de processamento de filas focado em alta performance e resiliência.</strong></p>
+</div>
 
-### 🔥 Principais Funcionalidades
-- **PHP 8.4 Native**: Uso exclusivo de *Enums*, Propriedades rigorosamente tipadas e otimizações de base.
-- **Tolerância a Falhas**: Sistema automático de _Retry_ e contagem de _Exceptions_. Se um Job falhar por *N* vezes, ele é marcado em erro com o _stack trace_ isolado (Fila Morta).
-- **Doctrine DBAL**: Abstração profunda de banco de dados e execução segura de sintaxes (anti-Injection).
-- **DotEnv Secure**: Suporte a ambiente blindado para credenciais sensíveis via `.env`.
-- **Zero-Config Dashboard**: UI Dark Mode interativa em Realtime inclusa para acompanhamento de filas e seeds na porta principal.
+<hr />
+
+## 📖 Visão Geral
+
+O **CronJob Engine** é uma implementação robusta e autônoma desenvolvida em **PHP 8.4** para gerenciamento e execução de filas baseadas em banco de dados (*Database-backed Queues*). 
+
+Seu propósito é isolar tarefas pesadas — como envio em massa de e-mails, processos complexos de integração governamental, relatórios PDF massivos e conexões com APIs lentas — garantindo que a aplicação web principal (Frontend/API) responda imediatamente ao cliente.
+
+### ✨ Por Que Usar Este Motor?
+* **Zero Timeout**: As requisições HTTP do seu cliente não travam mais. O trabalho longo é delegado para o banco em menos de *1ms*.
+* **Tolerância a Falhas Dinâmica (Retry Inteligente)**: O motor captura intermitências (como quedas temporárias de rede do SMTP). Ele processará automaticamente a mesma tarefa até 3 vezes. Caso ultrapasse a resiliência, encaminha o job para a Fila Morta (Status de Erro Absoluto) anexando a Stack Trace completa do problema.
+* **PHP 8.4 Native**: Uso sofisticado do estado da arte do PHP (Enums fortemente tipados, propriedades modernas e injeções puras).
+* **Integração Agnóstica**: Funciona independente do ecossistema principal do seu app e framework. Basta invocar a `FilaModel::add`.
 
 ---
 
-## 🛠️ Stack de Tecnologias
-- [PHP 8.4](https://www.php.net/) - A linguagem Core.
-- [Docker](https://www.docker.com/) & Docker Compose - Orquestração de containers com a imagem `php:8.4-apache` e _MySQL 8+_.
-- [Doctrine DBAL](https://www.doctrine-project.org/) - Conexão transparente ao BD e persistência.
-- [PHPUnit](https://phpunit.de/) - Cobertura da suíte de Testes.
-- [Vlucas/PhpDotenv](https://github.com/vlucas/phpdotenv) - Variáveis de ambiente secretas.
+## 🏗️ Arquitetura do Sistema
+
+O motor opera em modelo assíncrono. Enquanto as classes adicionam requisições na tabela num piscar de olhos, paralelamente um processo paralelo em _Loop Contínuo_ (O `QueueWorker`) captura as pendências, e utilizando a **Reflection API**, desperta inteligentemente os referidos arquivos e funções para o consumo.
+
+```text
+cronjob/
+├── .docker/             # Configurações de virtualização e setup automático (Schema MySQL)
+├── www/
+│   ├── .env             # Mapeamento blindado de credenciais de serviço
+│   ├── src/             
+│   │   ├── Enums/       # Status rigorosos da fila de mensageria (Processando, Aguardando, Erro)
+│   │   ├── Models/      # Camada Doctrine DBAL de persistência e Queries 
+│   │   ├── Services/    # O Core do QueueWorker que orquestra a Reflection
+│   │   └── Jobs/        # Repositório das lógicas demoradas a serem processadas
+│   ├── bin/             # Daemon executável em terminal local (script worker infinito)
+│   └── tests/           # Suíte nativa para cobertura automatizada (PHPUnit)
+└── ...
+```
 
 ---
 
-## 🚀 Como Iniciar (Setup)
+## 🚀 Guia Prático de Instalação (Deploy)
 
-**1. Instale as dependências via Composer**
-Se estiver local, baixe os vendors. _(Dentro do ambiente Docker ele pode compartilhar o volume)_.
+O ambiente é 100% conteinerizado usando Docker, exigindo zero configuração manual para ligar o Motor de Filas e o Serviço de Database dedicado.
+
+**1. Clone o repositório e configure as variáveis de segurança:**
 ```bash
-cd www/
-composer install
+git clone https://github.com/alessandroisdev/cronjob.git
+cd cronjob/www
+cp .env.example .env
 ```
 
-**2. Configure o Banco de Dados (Ambiente)**
-Crie a cópia do seu arquivo DotEnv:
+**2. Levante o Ecossistema Computacional (Docker Compose):**
 ```bash
-cp www/.env.example www/.env
-```
-*(Opcional: preencha as variáveis em `.env` se for rodar externamente. No container ele usa os defaults de root).*
-
-**3. Inicie os Containers**
-O projeto acompanha provisionamento ágil contendo o Servidor Web e o Banco de Dados (que roda o script automático e já estrutura a tabela `fila` para você).
-```bash
+cd ..
 docker compose up -d --build
 ```
+*Nota: Graças ao volume otimizado no boot, o banco criará autonomamente caso nunca o tenha feito a estrutura íntegra da tabela (`schema.sql`).*
+
+**3. Autoload via Composer:**
+Garante que o diretório _vendor_ contenha todas as premissas como Doctrine e PHPUnit.
+```bash
+docker exec -it alessandrois_app composer install
+```
 
 ---
 
-## 🖥️ Como Acessar
+## 💻 Usabilidade na Prática (Para Devs)
 
-- **Dashboard Visual**: Abra em seu navegador: `http://localhost:8000`. Aqui você pode rastrear os Jobs e criar instâncias falsas/demonstrativas de fila para teste.
-- **Acionar Motor (O Worker)**: Execute esse comando para "Ligar a Esteira". O Daemon ficará lendo o banco a cada 3 segundos infinitamente, buscando resgatar e processar tarefas.
-  ```bash
-  docker exec -it alessandrois_app php bin/worker.php
-  ```
+Adicionar novas rotinas na fila é um aspecto projetado para ser limpo e fluído, quase sem verbosidade de código.
 
----
+### Passo 1: Construindo sua Classe Alvo Isolada
+Qualquer rotina pesada deve estar agrupada numa classe regular com funções públicas, esperando primariamente os parâmetros do seu Payload em forma associativa (Array).
+```php
+namespace App\Jobs;
 
-## 🏗️ Adicionando na Fila
+class EmissaoNotaExterna 
+{
+    public function gerarEmissao(array $payload, bool $forcarAutorizacao = false) 
+    {
+        // Lógica de comunicação Sefaz ou Gateways durando de 5 a 10s aqui...
+    }
+}
+```
 
-Para instruir um programa a executar na fila, você não requer instanciar complexos scripts, bastam 5 Linhas:
+### Passo 2: O Agente Despachante
+No mesmo segundo em que a requisição adentra a controladora da sua API/Frontend, faça a sua injeção:
 ```php
 use AlessandroIsDev\CronJob\Models\FilaModel;
-use SuaApp\Jobs\SeuArquivoPesado;
+use App\Jobs\EmissaoNotaExterna;
 
 FilaModel::add(
-    ['info' => 'Dados gigantes e json payload'], // O Payload base das variaveis
-    SeuArquivoPesado::class,                     // A sua classe resolvida 
-    'seuMetodoPublico',                          // O método da referida classe
-    $arg1, $arg2                                 // N argumentos extras contínuos de função nativa
+    ['num_comprador' => 9991230, 'valor' => 1500.00], 
+    EmissaoNotaExterna::class,                    // FQCN detectado por escopo       
+    'gerarEmissao',                               // Nome do referido método público
+    true                                          // Modificadores opcionais da assinatura do pacote
 );
 ```
-O *Worker* automaticamente detectará a classe, vai instanciá-la por _Reflection_ limitando os erros de timeout e isolando instabilidades.
 
-Para entender passo a passo o desenvolvimento arquitetural por trás desta Fila, consulte os cadernos em: `/.dev/passo_a_passo.md`.
+### Passo 3: O Ligamento (Pelo ambiente Servidor)
+Dê a partida no Worker para ele trabalhar perpetamente via Terminal / CRON ou Supervisor linux:
+```bash
+docker exec -d alessandrois_app php bin/worker.php
+```
 
 ---
-Feito com 💡 e Código de Alta Performance.
+
+## 📊 Dashboard UI e Monitoria
+Este pacote acompanha uma Interface Limpida projetada em *Dark Mode*.
+Acesse **`http://localhost:8000/`** no seu navegador para verificar um painel consolidando KPIs com relatórios anexos de instabilidades, lógicas de retentativas visualizadas em Real-Time e falhas fatais que exigem resolução humana. Nenhuma linha de terminal precisa ser lida. Tudo está transparente.
+
+---
+
+## 🎯 Suíte de Testes (TDD)
+Mantemos robustez e segurança arquitetural extrema. Verifique a resiliência a exaustões executando toda a bateria estritamente avaliada sobre Exceptions e Loops:
+```bash
+docker exec -it alessandrois_app ./vendor/bin/phpunit
+```
+
+<hr />
+
+<div align="center">
+  <sub>App Architecture • Performance • Open-Source Code </sub><br />
+  <sub>Copyright © Alessandro P Souza </sub>
+</div>
